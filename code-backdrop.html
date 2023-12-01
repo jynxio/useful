@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        border: none;
+        outline: none;
+      }
+
+      section {
+        --x: 0px;
+        --y: 0px;
+        --color-link: rgb(142, 100, 255);
+        --color-link-hover: rgb(249, 38, 114);
+
+        overflow: hidden;
+        position: relative;
+        block-size: 30rem;
+        inline-size: 30rem;
+        background-color: black;
+      }
+
+      section::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto auto 0;
+        block-size: 100%;
+        inline-size: 100%;
+        mix-blend-mode: darken;
+        background: radial-gradient(
+          rgb(23, 24, 37) 40%,
+          rgb(102, 51, 238) 50%,
+          var(--color-link),
+          var(--color-link-hover)
+        );
+      }
+
+      div {
+        position: absolute;
+        inset: 0 auto auto 0;
+        inline-size: 100%;
+        block-size: 100%;
+        font-family: "Fira code";
+        font-size: 80%;
+        word-wrap: break-word;
+        color: white;
+        opacity: 0;
+        transition: opacity 250ms ease;
+        -webkit-mask-image: radial-gradient(
+          300px circle at var(--x) var(--y),
+          black 20%,
+          rgba(0, 0, 0, 0.25),
+          transparent
+        );
+        mask-image: radial-gradient(
+          300px circle at var(--x) var(--y),
+          black 20%,
+          rgba(0, 0, 0, 0.25),
+          transparent
+        );
+      }
+    </style>
+  </head>
+  <body>
+    <section>
+      <div></div>
+    </section>
+
+    <script>
+      const dom = document.querySelector("section");
+
+      createCodeBackdrop(dom);
+
+      function createCodeBackdrop(dom) {
+        const parent = dom;
+        const child = parent.querySelector("*");
+
+        const style = { x: 0, y: 0 };
+        const position = { x: 0, y: 0 };
+
+        let content = "";
+        let requestId = undefined;
+
+        parent.addEventListener("mouseenter", () => {
+          play();
+          child.style.setProperty("opacity", "1");
+        });
+        parent.addEventListener("mouseleave", () => {
+          stop();
+          child.style.setProperty("opacity", "0");
+        });
+        parent.addEventListener("mousemove", (event) => {
+          if (requestId === undefined) return;
+
+          position.x = event.offsetX;
+          position.y = event.offsetY;
+
+          content = createRandomString(3000);
+        });
+
+        function play() {
+          requestId = requestAnimationFrame(function loop() {
+            requestId = requestAnimationFrame(loop);
+            render();
+          });
+        }
+
+        function stop() {
+          cancelAnimationFrame(requestId);
+          requestId = undefined;
+        }
+
+        function render() {
+          const strength = 0.1;
+
+          const nextX = position.x;
+          const nextY = position.y;
+
+          const prevX = style.x || nextX;
+          const prevY = style.y || nextY;
+
+          style.x = lerp(prevX, nextX, strength);
+          style.y = lerp(prevY, nextY, strength);
+
+          child.textContent = content;
+          parent.style.setProperty("--x", style.x.toFixed() + "px");
+          parent.style.setProperty("--y", style.y.toFixed() + "px");
+        }
+
+        function lerp(a, b, n) {
+          return (1 - n) * a + n * b;
+        }
+
+        function createRandomString(count) {
+          const characters =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+          return Array.from({ length: count })
+            .map(
+              (_, i, self) =>
+                (self[i] = characters.charAt(
+                  Math.floor(Math.random() * characters.length)
+                ))
+            )
+            .join("");
+        }
+      }
+    </script>
+  </body>
+</html>
